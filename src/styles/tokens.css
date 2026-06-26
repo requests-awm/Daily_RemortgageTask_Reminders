@@ -1,0 +1,59 @@
+:root {
+  /* Brand / surfaces */
+  --navy-900: #0d1320;
+  --navy-800: #111a2b;
+  --navy-700: #16223a;
+  --navy-600: #1c2c49;
+  --ink: #1f2733;
+  --ink-soft: #3a4452;
+  --muted: #6b7280;
+  --muted-2: #8b94a3;
+
+  --bg: #f3f4f6;
+  --panel: #ffffff;
+  --panel-2: #fafbfc;
+  --line: #e4e7eb;
+  --line-strong: #d3d8df;
+
+  /* Primary action (dark navy button in screenshot) */
+  --primary: #0f2c4a;
+  --primary-hover: #0b2238;
+  --primary-fg: #ffffff;
+
+  /* Accent callout (cream/amber) */
+  --cream: #fdf6e9;
+  --cream-line: #efdcb4;
+  --amber: #9a7322;
+  --amber-strong: #7c5a14;
+
+  /* Status */
+  --green: #2e7d4f;
+  --green-bg: #e9f5ee;
+  --green-line: #bfe0cd;
+  --red: #b3261e;
+  --red-bg: #fcebea;
+  --red-line: #f1c4c1;
+  --blue: #1e5f8f;
+  --blue-bg: #e8f1f8;
+  --blue-line: #c2dbec;
+  --slate-bg: #eef1f5;
+
+  /* Stage colors (mirror the Zap branch colors) */
+  --stage-6b: #3f7d3f;   /* 6 months before  */
+  --stage-3b: #b06b2e;   /* 3 months before  */
+  --stage-1b: #3b4fb0;   /* 1 month before   */
+  --stage-1a: #6b7d2e;   /* 1 month after    */
+  --stage-3a: #5f6b78;   /* 3 months after   */
+  --stage-6a: #b0603f;   /* 6 months after   */
+
+  /* Radii / shadow / type */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --shadow-md: 0 4px 14px rgba(16, 24, 40, 0.08);
+  --shadow-lg: 0 12px 32px rgba(16, 24, 40, 0.12);
+
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --sidebar-w: 248px;
+}
