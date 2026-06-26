@@ -10,6 +10,39 @@ import { startScheduler, scheduleInfo } from './scheduler.mjs'
 
 const PORT = Number(process.env.PORT || 8787)
 
+// --- Production hardening: CORS allowlist + optional API token ---------------
+// CORS_ALLOWED_ORIGINS: comma-separated origins, or "*" (default) for any.
+const CORS_ALLOWED = (process.env.CORS_ALLOWED_ORIGINS || '*')
+  .split(',').map((s) => s.trim()).filter(Boolean)
+// API_TOKEN: when set, mutating routes require "Authorization: Bearer <token>".
+// Leave blank to disable (e.g. the API is only reached over a trusted network).
+// NOTE: a token baked into the browser bundle is public — this guard is for
+// server-to-server / trusted callers, not for protecting browser-issued sends.
+const API_TOKEN = (process.env.API_TOKEN || '').trim()
+
+function applyCors(req, res) {
+  const origin = req.headers.origin
+  let allow = ''
+  if (CORS_ALLOWED.includes('*')) allow = '*'
+  else if (origin && CORS_ALLOWED.includes(origin)) allow = origin
+  if (allow) {
+    res.setHeader('Access-Control-Allow-Origin', allow)
+    if (allow !== '*') res.setHeader('Vary', 'Origin')
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+}
+
+function authorized(req) {
+  if (!API_TOKEN) return true
+  const m = /^Bearer\s+(.+)$/i.exec(req.headers.authorization || '')
+  return !!m && m[1] === API_TOKEN
+}
+
+// Don't let an unhandled async error take the process down silently.
+process.on('unhandledRejection', (e) => console.error('[unhandledRejection]', e?.message || e))
+process.on('uncaughtException', (e) => console.error('[uncaughtException]', e?.message || e))
+
 // In-memory cache of today's run (no DB yet). The scheduler refreshes this at
 // 8:30; /api/run serves it for the rest of the day so the queue is instant.
 let cachedResult = null            // full runPipeline result
@@ -47,17 +80,14 @@ function readJson(req) {
 
 function send(res, status, body) {
   const json = JSON.stringify(body)
-  res.writeHead(status, {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-  })
+  // CORS headers are set per-request by applyCors() before any send().
+  res.writeHead(status, { 'Content-Type': 'application/json' })
   res.end(json)
 }
 
 const server = createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`)
+  applyCors(req, res)
 
   if (req.method === 'OPTIONS') return send(res, 204, {})
 
@@ -89,6 +119,7 @@ const server = createServer(async (req, res) => {
   }
 
   if (url.pathname === '/api/send' && req.method === 'POST') {
+    if (!authorized(req)) return send(res, 401, { error: 'Unauthorized' })
     try {
       const payload = await readJson(req)
       if (!payload.id) return send(res, 400, { error: 'Missing reminder id' })
@@ -124,6 +155,7 @@ const server = createServer(async (req, res) => {
 
   // Force a run now (manual trigger / "Run now" button).
   if (url.pathname === '/api/run/now' && req.method === 'POST') {
+    if (!authorized(req)) return send(res, 401, { error: 'Unauthorized' })
     try {
       const result = await runAndCache('manual')
       return send(res, 200, { ok: true, ...lastRun, candidates: result.candidates })
@@ -142,7 +174,8 @@ const server = createServer(async (req, res) => {
 })
 
 server.listen(PORT, () => {
-  console.log(`Remortgage backend listening on http://localhost:${PORT}`)
+  console.log(`Remortgage backend listening on port ${PORT}`)
+  console.log(`  CORS: ${CORS_ALLOWED.includes('*') ? 'any origin (*)' : CORS_ALLOWED.join(', ')}; API token: ${API_TOKEN ? 'required' : 'disabled'}`)
   const expr = startScheduler(runAndCache)
   const info = scheduleInfo()
   console.log(`  scheduler armed: "${expr}" ${info.timezone} (weekends: ${info.weekends ? 'yes' : 'no'})`)

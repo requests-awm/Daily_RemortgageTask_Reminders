@@ -1,0 +1,41 @@
+# Full stack: nginx-served SPA (web) + Node API (api).
+#
+# Prereq: copy server/.env.example -> server/.env and fill in real values.
+# Start:  docker compose up --build
+#   web -> http://localhost:8080   (mock mode by default)
+#   api -> http://localhost:8787   (live Asana/Insightly/Gmail)
+#
+# The web image defaults to MOCK mode, so it runs standalone with no backend.
+# To make the SPA talk to the API, rebuild web in live mode (see args below).
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    image: remortgage-reminder-api
+    # Secrets are injected at runtime, never baked into the image.
+    env_file:
+      - ./server/.env
+    environment:
+      PORT: "8787"
+      # Safety defaults — these also default on in code, set here for clarity.
+      SEND_MODE: ${SEND_MODE:-dry}
+      TEST_RECIPIENTS_ONLY: ${TEST_RECIPIENTS_ONLY:-true}
+    ports:
+      - "8787:8787"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      args:
+        # Flip to "false" + set the API URL (as the BROWSER reaches it) for live mode.
+        VITE_USE_MOCK: "true"
+        VITE_API_BASE_URL: ""
+    image: remortgage-reminder-web
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+    restart: unless-stopped

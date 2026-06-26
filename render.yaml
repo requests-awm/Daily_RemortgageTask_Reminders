@@ -1,0 +1,67 @@
+# Render Blueprint — deploys the Node API as an always-on web service.
+#
+# IMPORTANT: the daily reminder run uses an IN-PROCESS cron (node-cron), so the
+# instance must stay awake. Render free instances sleep on idle and the 08:30
+# job would never fire — use a paid (starter+) plan, or switch to a platform
+# cron job that POSTs /api/run/now and drop the in-process scheduler.
+#
+# Secrets are NOT in this file (sync: false). Set them in the Render dashboard
+# to match server/.env.example, then trigger a deploy.
+services:
+  - type: web
+    name: remortgage-reminder-api
+    runtime: node
+    plan: starter
+    region: frankfurt
+    branch: main
+    buildCommand: npm ci --omit=dev
+    startCommand: node server/index.mjs
+    healthCheckPath: /api/health
+    autoDeploy: false
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      # Safety defaults — keep these until you have verified live sending.
+      - key: SEND_MODE
+        value: dry
+      - key: TEST_RECIPIENTS_ONLY
+        value: "true"
+      # Set to your frontend origin, e.g. https://remortgage.vercel.app
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: API_TOKEN
+        sync: false
+      # Asana
+      - key: ASANA_ACCESS_TOKEN
+        sync: false
+      - key: ASANA_PROJECT_ID
+        sync: false
+      - key: ASANA_WORKSPACE_ID
+        sync: false
+      # Insightly
+      - key: INSIGHTLY_API_KEY
+        sync: false
+      - key: INSIGHTLY_API_URL
+        value: https://api.na1.insightly.com/v3.1
+      # Gmail / Google OAuth
+      - key: GMAIL_CLIENT_ID
+        sync: false
+      - key: GMAIL_CLIENT_SECRET
+        sync: false
+      - key: GMAIL_REFRESH_TOKEN
+        sync: false
+      - key: MAIL_FROM_NAME
+        sync: false
+      - key: MAIL_FROM_ADDRESS
+        sync: false
+      - key: MAIL_REPLY_TO
+        sync: false
+      - key: MAIL_BCC
+        sync: false
+      # Scheduler
+      - key: RUN_CRON
+        value: 30 8 * * *
+      - key: RUN_TIMEZONE
+        value: Europe/London
+      - key: RUN_WEEKENDS
+        value: "yes"
