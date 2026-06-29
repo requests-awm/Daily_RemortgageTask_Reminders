@@ -7,8 +7,8 @@ const tz = () => (process.env.RUN_TIMEZONE || 'Europe/London').trim()
 const weekendsOn = () => (process.env.RUN_WEEKENDS || 'yes').toLowerCase() !== 'no'
 
 function cronParts() {
-  const raw = (process.env.RUN_CRON || '30 8 * * *').trim().split(/\s+/)
-  return { min: parseInt(raw[0], 10) || 0, hour: parseInt(raw[1], 10) || 8 }
+  const raw = (process.env.RUN_CRON || '0 9 * * *').trim().split(/\s+/)
+  return { min: parseInt(raw[0], 10) || 0, hour: parseInt(raw[1], 10) || 9 }
 }
 
 const pad = (n) => String(n).padStart(2, '0')

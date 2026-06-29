@@ -21,7 +21,8 @@ export function StatusPill({ status }) {
     pending: ['pill-amber', 'Awaiting review'],
     sent: ['pill-green', 'Sent'],
     skipped: ['pill-slate', 'Skipped'],
-    stopped: ['pill-red', 'Automation stopped'],
+    stopped: ['pill-red', 'Stopped'],
+    deleted: ['pill-slate', 'Deleted'],
   }
   const [cls, label] = map[status] || ['pill-slate', status]
   return <span className={`pill ${cls}`}>{label}</span>

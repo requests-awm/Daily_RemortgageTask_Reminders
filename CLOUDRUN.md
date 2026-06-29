@@ -54,17 +54,17 @@ API_TOKEN=<long-random-string>
 Keep `SEND_MODE=dry` and `TEST_RECIPIENTS_ONLY=true` until you've verified a live
 send. Set `NOTIFY_EMAIL=...` to turn on the held-reminder alert.
 
-## 3. The daily 08:30 run — use Cloud Scheduler (important)
+## 3. The daily 09:00 run — use Cloud Scheduler (important)
 
 Cloud Run **scales to zero**, so the in-process `node-cron` scheduler will NOT
-reliably fire at 08:30 (no instance is running). Two options:
+reliably fire at 09:00 (no instance is running). Two options:
 
 **Recommended — Cloud Scheduler hits the endpoint:**
 
 ```bash
 gcloud scheduler jobs create http mortgage-daily-run \
   --location europe-west2 \
-  --schedule "30 8 * * *" \
+  --schedule "0 9 * * *" \
   --time-zone "Europe/London" \
   --uri "https://mortgagereminders.ascotwm.com/api/run/now" \
   --http-method POST \

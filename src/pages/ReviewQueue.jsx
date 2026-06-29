@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { format, parseISO } from 'date-fns'
-import { Search, ExternalLink, AlertTriangle, Mail, Clock, Check, SkipForward, ShieldOff, User, LayoutList, Table2 } from 'lucide-react'
+import { Search, ExternalLink, AlertTriangle, Mail, Clock, Check, SkipForward, ShieldOff, User, LayoutList, Table2, Trash2, Pause, Play, CircleSlash } from 'lucide-react'
 import Topbar from '../components/Topbar.jsx'
 import { RunBanner, LoadingState } from '../components/RunBanner.jsx'
 import StageBadge from '../components/StageBadge.jsx'
@@ -16,6 +16,7 @@ const STATUS_PILL = {
   sent: { label: 'Sent', variant: 'green', icon: <Check size={12} /> },
   skipped: { label: 'Skipped', variant: 'slate', icon: <SkipForward size={12} /> },
   stopped: { label: 'Stopped', variant: 'red', icon: <ShieldOff size={12} /> },
+  deleted: { label: 'Deleted', variant: 'slate', icon: <Trash2 size={12} /> },
 }
 
 const TABS = [
@@ -23,6 +24,7 @@ const TABS = [
   { key: 'sent', label: 'Sent' },
   { key: 'skipped', label: 'Skipped' },
   { key: 'stopped', label: 'Stopped' },
+  { key: 'deleted', label: 'Deleted' },
 ]
 
 const STAGE_ORDER = Object.fromEntries(STAGES.map((s, i) => [s.label, i]))
@@ -36,7 +38,7 @@ const AsanaLink = (r) => (
 )
 
 export default function ReviewQueue() {
-  const { candidates, counts, loading, runDate } = useStore()
+  const { candidates, counts, loading, runDate, stopReminder, resumeReminder, deleteReminder, skipReminder } = useStore()
   const [tab, setTab] = useState('pending')
   const [query, setQuery] = useState('')
   const [sortKey, setSortKey] = useState(null)
@@ -45,11 +47,24 @@ export default function ReviewQueue() {
   const nav = useNavigate()
   const nextDate = fmt(runDate)
 
+  const cardMenu = (c) => {
+    const pause = { key: 'pause', label: 'Pause', icon: <Pause size={15} />, onClick: () => stopReminder(c.id) }
+    const resume = { key: 'resume', label: 'Resume', icon: <Play size={15} />, onClick: () => resumeReminder(c.id) }
+    const cancel = { key: 'cancel', label: 'Cancel', icon: <CircleSlash size={15} />, onClick: () => skipReminder(c.id, 'Cancelled') }
+    const del = { key: 'delete', label: 'Delete', icon: <Trash2 size={15} />, onClick: () => deleteReminder(c.id), danger: true }
+    if (c.status === 'pending') return [pause, cancel, del]
+    if (c.status === 'stopped') return [resume, cancel, del]
+    if (c.status === 'skipped') return [resume, del]
+    if (c.status === 'deleted') return [resume]
+    return [del] // sent
+  }
+
   const cardProps = (c) => {
     const stamp =
       c.status === 'sent' ? `Sent ${c.sentAt || ''}`.trim()
         : c.status === 'skipped' ? (c.skipReason || 'Skipped')
-        : c.status === 'stopped' ? 'Automation stopped'
+        : c.status === 'stopped' ? 'Stopped — won’t send'
+        : c.status === 'deleted' ? 'Deleted from this run'
         : `Next: ${nextDate}`
     return {
       icon: <Mail size={18} />,
@@ -76,6 +91,7 @@ export default function ReviewQueue() {
       ],
       stamp,
       hoverPreview: <EmailHover subject={c.message.subject} bodyHtml={c.message.bodyHtml} to={c.clientEmail} cc={c.broker?.email} />,
+      menu: cardMenu(c),
       onClick: () => nav(`/review/${c.id}`),
     }
   }

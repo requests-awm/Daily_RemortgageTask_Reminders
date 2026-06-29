@@ -1,7 +1,7 @@
 # Render Blueprint — deploys the Node API as an always-on web service.
 #
 # IMPORTANT: the daily reminder run uses an IN-PROCESS cron (node-cron), so the
-# instance must stay awake. Render free instances sleep on idle and the 08:30
+# instance must stay awake. Render free instances sleep on idle and the 09:00
 # job would never fire — use a paid (starter+) plan, or switch to a platform
 # cron job that POSTs /api/run/now and drop the in-process scheduler.
 #
@@ -60,7 +60,7 @@ services:
         sync: false
       # Scheduler
       - key: RUN_CRON
-        value: 30 8 * * *
+        value: 0 9 * * *
       - key: RUN_TIMEZONE
         value: Europe/London
       - key: RUN_WEEKENDS

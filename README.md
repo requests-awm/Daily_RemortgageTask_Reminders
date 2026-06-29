@@ -91,7 +91,7 @@ identically on mock or live data. To go live, replace the body of
 - **Asana API** for the task pull (the Zap's pagination) and comment posting
 - **Insightly API** for the contact-email lookup
 - **Gmail API** for the send
-- a **scheduler** (Supabase cron / edge function) to trigger the 8:30 run
+- a **scheduler** (Supabase cron / edge function) to trigger the 9:00 run
 
 No component imports anything below `store.jsx`, so the UI is untouched by that swap.
 

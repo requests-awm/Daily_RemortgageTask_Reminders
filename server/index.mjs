@@ -11,7 +11,7 @@ import { extname, normalize, join } from 'node:path'
 import { format } from 'date-fns'
 import { runPipeline, runAndDispatch, sendReminder, sendMode, listTasks, listUpcoming } from './pipeline.mjs'
 import { startScheduler, scheduleInfo } from './scheduler.mjs'
-import { notifyHeld } from './notify.mjs'
+import { notifyHeld, notifyFallback } from './notify.mjs'
 
 const PORT = Number(process.env.PORT || 8787)
 
@@ -114,6 +114,16 @@ async function runAndCache(source) {
     lastRun.notified = !!n.sent
   } catch (e) {
     console.error('[notify] failed:', e.message)
+  }
+
+  // Escalate reminders blocked by missing broker/email to the fallback handler.
+  try {
+    const f = await notifyFallback(result)
+    if (f.sent) console.log(`[fallback] escalated ${f.count} broker/email-blocked reminder(s) to ${f.to}`)
+    else console.log(`[fallback] no escalation (${f.reason || f.error})`)
+    lastRun.escalated = f.sent ? f.count : 0
+  } catch (e) {
+    console.error('[fallback] failed:', e.message)
   }
   return result
 }

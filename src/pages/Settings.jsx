@@ -21,7 +21,7 @@ export default function Settings() {
           <div className="card card-pad">
             <div className="card-head"><Clock size={15} /> Schedule</div>
             <div className="kv-grid">
-              <div className="field"><label>Run time</label><input defaultValue="8:30 AM" /></div>
+              <div className="field"><label>Run time</label><input defaultValue="9:00 AM" /></div>
               <div className="field"><label>Timezone</label><input defaultValue="Europe/London" /></div>
               <div className="field"><label>Run on weekends</label><select defaultValue="yes"><option value="yes">Yes</option><option value="no">No</option></select></div>
               <div className="field"><label>Asana project</label><input defaultValue="ANa. PL - SUPP - Mortgage Team DYNAMIC" /></div>

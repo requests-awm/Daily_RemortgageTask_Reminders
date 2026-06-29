@@ -9,7 +9,6 @@ export default function EmailHover({ subject, bodyHtml, to, cc }) {
       <div className="eh-sub">{subject}</div>
       <div className="eh-to">To {to || '— resolved from Insightly at send —'}{cc ? ` · cc ${cc}` : ''}</div>
       <div className="email-body eh-body" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
-      <div className="eh-fade" />
     </div>
   )
 }

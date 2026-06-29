@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { format, parseISO } from 'date-fns'
-import { Search, ExternalLink, RefreshCw, ClipboardList, Check, ShieldOff, User, Hash, LayoutList, Table2 } from 'lucide-react'
+import { Search, ExternalLink, RefreshCw, ClipboardList, Check, ShieldOff, User, Hash, LayoutList, Table2, Pause, Play, CircleSlash, Trash2 } from 'lucide-react'
 import Topbar from '../components/Topbar.jsx'
 import { LoadingState } from '../components/RunBanner.jsx'
 import SheetTable from '../components/SheetTable.jsx'
@@ -20,30 +20,57 @@ export default function AllTasks() {
   const [sortKey, setSortKey] = useState(null)
   const [sortDir, setSortDir] = useState('asc')
   const [view, setView] = useState('cards')
+  // Per-task lifecycle overrides (session-scoped): id -> paused|cancelled|deleted
+  const [actions, setActions] = useState({})
+  const setStatus = (id, s) => setActions((m) => ({ ...m, [id]: s }))
+  const clearStatus = (id) => setActions((m) => { const n = { ...m }; delete n[id]; return n })
 
-  const cardProps = (t) => ({
-    icon: <ClipboardList size={18} />,
-    flag: t.stopped,
-    pills: [
-      t.stopped
-        ? { key: 'st', label: 'Stopped', variant: 'red', icon: <ShieldOff size={12} /> }
-        : { key: 'st', label: 'Active', variant: 'green', icon: <Check size={12} /> },
-      ...(t.confirmedDate ? [] : [{ key: 'nd', label: 'No date', variant: 'outline' }]),
-    ],
-    chips: [
-      { key: 'asana', label: 'Asana', ok: true, href: t.asanaLink },
-      { key: 'ins', label: t.insightlyId ? 'Insightly' : 'No Insightly ID', ok: !!t.insightlyId },
-    ],
-    title: t.fullName,
-    subtitle: t.taskName,
-    date: fmt(t.confirmedDate),
-    dateLabel: 'Confirmed remortgage date',
-    lines: [
-      { key: 'broker', icon: <User size={13} />, text: t.brokerName || 'No broker', muted: !t.brokerName },
-      ...(t.insightlyId ? [{ key: 'ins', icon: <Hash size={13} />, text: t.insightlyId, muted: true }] : []),
-    ],
-    onClick: () => window.open(t.asanaLink, '_blank'),
-  })
+  const STATUS_PILL = {
+    paused: { key: 'ov', label: 'Paused', variant: 'amber', icon: <Pause size={12} /> },
+    cancelled: { key: 'ov', label: 'Cancelled', variant: 'slate', icon: <CircleSlash size={12} /> },
+    deleted: { key: 'ov', label: 'Deleted', variant: 'slate', icon: <Trash2 size={12} /> },
+  }
+
+  const cardMenu = (t) => {
+    const st = actions[t.id]
+    const pause = { key: 'pause', label: 'Pause', icon: <Pause size={15} />, onClick: () => setStatus(t.id, 'paused') }
+    const resume = { key: 'resume', label: 'Resume', icon: <Play size={15} />, onClick: () => clearStatus(t.id) }
+    const cancel = { key: 'cancel', label: 'Cancel', icon: <CircleSlash size={15} />, onClick: () => setStatus(t.id, 'cancelled') }
+    const del = { key: 'delete', label: 'Delete', icon: <Trash2 size={15} />, onClick: () => setStatus(t.id, 'deleted'), danger: true }
+    if (st === 'paused') return [resume, cancel, del]
+    if (st === 'cancelled') return [resume, del]
+    if (st === 'deleted') return [resume]
+    return [pause, cancel, del]
+  }
+
+  const cardProps = (t) => {
+    const st = actions[t.id]
+    return {
+      icon: <ClipboardList size={18} />,
+      flag: t.stopped,
+      pills: [
+        ...(st ? [STATUS_PILL[st]] : []),
+        t.stopped
+          ? { key: 'st', label: 'Stopped', variant: 'red', icon: <ShieldOff size={12} /> }
+          : { key: 'st', label: 'Active', variant: 'green', icon: <Check size={12} /> },
+        ...(t.confirmedDate ? [] : [{ key: 'nd', label: 'No date', variant: 'outline' }]),
+      ],
+      chips: [
+        { key: 'asana', label: 'Asana', ok: true, href: t.asanaLink },
+        { key: 'ins', label: t.insightlyId ? 'Insightly' : 'No Insightly ID', ok: !!t.insightlyId },
+      ],
+      title: t.fullName,
+      subtitle: t.taskName,
+      date: fmt(t.confirmedDate),
+      dateLabel: 'Confirmed remortgage date',
+      lines: [
+        { key: 'broker', icon: <User size={13} />, text: t.brokerName || 'No broker', muted: !t.brokerName },
+        ...(t.insightlyId ? [{ key: 'ins', icon: <Hash size={13} />, text: t.insightlyId, muted: true }] : []),
+      ],
+      menu: cardMenu(t),
+      onClick: () => window.open(t.asanaLink, '_blank'),
+    }
+  }
 
   const refresh = () => {
     setLoading(true)

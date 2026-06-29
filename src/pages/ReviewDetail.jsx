@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import {
   ShieldCheck, ShieldAlert, ShieldOff, Mail, MailX, UserCheck, UserX,
   ExternalLink, ArrowLeft, ArrowRight, Send, SkipForward, Pencil, MessageSquare, Sparkles, CheckCircle2, Clock,
+  Ban, Trash2, RotateCcw,
 } from 'lucide-react'
 import Topbar from '../components/Topbar.jsx'
 import Stepper from '../components/Stepper.jsx'
@@ -16,7 +17,7 @@ const STEPS = [{ label: 'Review & Compliance' }, { label: 'Message' }, { label: 
 export default function ReviewDetail() {
   const { id } = useParams()
   const nav = useNavigate()
-  const { getById, sendReminder, skipReminder, updateMessage, loading, sendMode } = useStore()
+  const { getById, sendReminder, skipReminder, updateMessage, stopReminder, resumeReminder, deleteReminder, loading, sendMode } = useStore()
   const c = getById(id)
 
   const [step, setStep] = useState(0)
@@ -57,6 +58,9 @@ export default function ReviewDetail() {
     }
   }
   const doSkip = () => { skipReminder(c.id, skipReason || 'No reason given'); nav('/review') }
+  const doStop = () => { stopReminder(c.id); nav('/review') }
+  const doResume = () => { resumeReminder(c.id); nav('/review') }
+  const doDelete = () => { deleteReminder(c.id); nav('/review') }
 
   return (
     <>
@@ -269,6 +273,18 @@ export default function ReviewDetail() {
           </div>
         )}
         <div className="right">
+          {/* Lifecycle controls */}
+          {c.status === 'pending' && !skipping && (
+            <button className="btn btn-outline" onClick={doStop} title="Stop this reminder from sending"><Ban size={15} /> Stop</button>
+          )}
+          {(c.status === 'stopped' || c.status === 'deleted') && (
+            <button className="btn btn-outline" onClick={doResume} title="Return to Awaiting Review"><RotateCcw size={15} /> Resume</button>
+          )}
+          {c.status !== 'deleted' && (
+            <button className="btn btn-danger" onClick={doDelete} title="Remove from this run"><Trash2 size={15} /> Delete</button>
+          )}
+
+          {/* Review wizard (pending only) */}
           {!handled && !skipping && (
             <button className="btn btn-danger" onClick={() => setSkipping(true)}><SkipForward size={15} /> Skip</button>
           )}
@@ -286,7 +302,7 @@ export default function ReviewDetail() {
             </button>
           )}
           {handled && (
-            <button className="btn btn-primary" onClick={() => nav('/review')}>Back to queue</button>
+            <button className="btn btn-ghost" onClick={() => nav('/review')}>Back to queue</button>
           )}
         </div>
       </div>

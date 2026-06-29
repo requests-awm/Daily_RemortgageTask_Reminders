@@ -104,6 +104,26 @@ export function StoreProvider({ children }) {
     )
   }
 
+  // Lifecycle controls (session-scoped until the DB phase).
+  const stopReminder = (id) => {
+    const c = candidates.find((x) => x.id === id)
+    if (!c) return
+    setCandidates((prev) => prev.map((x) => (x.id === id ? { ...x, status: 'stopped' } : x)))
+    setAudit((a) => [auditEntry(c, 'stopped', 'Sending stopped by reviewer'), ...a])
+  }
+  const resumeReminder = (id) => {
+    const c = candidates.find((x) => x.id === id)
+    if (!c) return
+    setCandidates((prev) => prev.map((x) => (x.id === id ? { ...x, status: 'pending', skipReason: null } : x)))
+    setAudit((a) => [auditEntry(c, 'resumed', 'Returned to Awaiting Review'), ...a])
+  }
+  const deleteReminder = (id) => {
+    const c = candidates.find((x) => x.id === id)
+    if (!c) return
+    setCandidates((prev) => prev.map((x) => (x.id === id ? { ...x, status: 'deleted' } : x)))
+    setAudit((a) => [auditEntry(c, 'deleted', 'Removed from this run'), ...a])
+  }
+
   const value = useMemo(() => {
     const pending = candidates.filter((c) => c.status === 'pending')
     const counts = {
@@ -112,6 +132,7 @@ export function StoreProvider({ children }) {
       sent: candidates.filter((c) => c.status === 'sent').length,
       skipped: candidates.filter((c) => c.status === 'skipped').length,
       stopped: candidates.filter((c) => c.status === 'stopped').length,
+      deleted: candidates.filter((c) => c.status === 'deleted').length,
       blocked: pending.filter((c) => c.blockers.length).length,
     }
     const byStage = STAGES.map((s) => ({
@@ -132,6 +153,9 @@ export function StoreProvider({ children }) {
       sendReminder,
       skipReminder,
       updateMessage,
+      stopReminder,
+      resumeReminder,
+      deleteReminder,
       reload,
       getById: (id) => candidates.find((c) => c.id === id) || null,
       audit,

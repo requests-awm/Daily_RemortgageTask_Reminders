@@ -48,7 +48,7 @@ export async function loadUpcoming(days = 60) {
 // Scheduler status (next/last run) for the Overview.
 export async function loadSchedule() {
   if (USE_MOCK) {
-    return { cron: '30 8 * * *', timezone: 'Europe/London', weekends: true, runTime: '08:30', nextRun: 'Daily 08:30 (mock)', lastRun: null }
+    return { cron: '0 9 * * *', timezone: 'Europe/London', weekends: true, runTime: '09:00', nextRun: 'Daily 09:00 (mock)', lastRun: null }
   }
   const res = await fetch(`${API_BASE_URL}/api/schedule`)
   if (!res.ok) throw new Error(`Backend responded ${res.status}`)

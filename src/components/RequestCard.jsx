@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { ChevronDown, Check, X, ExternalLink, Calendar } from 'lucide-react'
+import { ChevronDown, Check, X, ExternalLink, Calendar, MoreVertical } from 'lucide-react'
 
 // Card-feed item modelled on the task-booker request list.
 // props:
@@ -14,21 +14,26 @@ import { ChevronDown, Check, X, ExternalLink, Calendar } from 'lucide-react'
 //   stamp     : string (small coloured timestamp)
 //   highlight : color string — paints a coloured left edge + tint (e.g. test cards)
 //   hoverPreview : node shown in a floating panel while hovering the card
+//   menu      : [{ key, label, icon, onClick, danger }] — kebab (⋮) actions
 //   onClick
-export default function RequestCard({ icon, flag, highlight, pills = [], chips = [], title, subtitle, date, dateLabel, lines = [], stamp, hoverPreview, onClick }) {
+export default function RequestCard({ icon, flag, highlight, pills = [], chips = [], title, subtitle, date, dateLabel, lines = [], stamp, hoverPreview, menu, onClick }) {
   const cardRef = useRef(null)
-  const [pop, setPop] = useState(null) // { top, left, maxH }
+  const timer = useRef(null)
+  const [pop, setPop] = useState(false) // centered preview visible?
+  const [menuOpen, setMenuOpen] = useState(false)
 
-  const showPreview = () => {
-    if (!hoverPreview || !cardRef.current) return
-    const r = cardRef.current.getBoundingClientRect()
-    const W = 430, gap = 12
-    // Prefer the right of the card; fall back to the left if there's no room.
-    const left = window.innerWidth - r.right > W + gap + 8 ? r.right + gap : Math.max(8, r.left - W - gap)
-    const top = Math.max(8, Math.min(r.top, window.innerHeight - 16 - 320))
-    setPop({ top, left, maxH: window.innerHeight - top - 16 })
+  // Open on intentional hover; keep open while the cursor is on card OR panel.
+  // Suppressed while the kebab menu is open so the two don't fight.
+  const openSoon = () => {
+    if (!hoverPreview || menuOpen) return
+    clearTimeout(timer.current)
+    timer.current = setTimeout(() => setPop(true), 140)
   }
-  const hidePreview = () => setPop(null)
+  const closeSoon = () => {
+    clearTimeout(timer.current)
+    timer.current = setTimeout(() => setPop(false), 160)
+  }
+  const keepOpen = () => clearTimeout(timer.current)
 
   const hlStyle = highlight
     ? { borderColor: highlight, background: `color-mix(in srgb, ${highlight} 6%, white)` }
@@ -41,8 +46,8 @@ export default function RequestCard({ icon, flag, highlight, pills = [], chips =
         className={`req-card${flag ? ' flag' : ''}${highlight ? ' hl' : ''}`}
         style={hlStyle}
         onClick={onClick}
-        onMouseEnter={showPreview}
-        onMouseLeave={hidePreview}
+        onMouseEnter={openSoon}
+        onMouseLeave={closeSoon}
       >
         {highlight && <span className="req-edge" style={{ background: highlight }} />}
         <div className="req-icon" style={highlight ? { background: `color-mix(in srgb, ${highlight} 16%, white)`, color: highlight } : undefined}>{icon}</div>
@@ -77,7 +82,31 @@ export default function RequestCard({ icon, flag, highlight, pills = [], chips =
         </div>
 
         <div className="req-right">
-          {onClick && <button className="req-chev" onClick={(e) => { e.stopPropagation(); onClick() }}><ChevronDown size={18} /></button>}
+          {menu && menu.length > 0 ? (
+            <div className="req-menu-wrap">
+              <button
+                className="req-chev"
+                title="Actions"
+                onClick={(e) => { e.stopPropagation(); setPop(false); clearTimeout(timer.current); setMenuOpen((o) => !o) }}
+              >
+                <MoreVertical size={18} />
+              </button>
+              {menuOpen && (
+                <>
+                  <div className="req-menu-backdrop" onClick={(e) => { e.stopPropagation(); setMenuOpen(false) }} />
+                  <div className="req-menu" onClick={(e) => e.stopPropagation()}>
+                    {menu.map((m) => (
+                      <button key={m.key} className={`req-menu-item${m.danger ? ' danger' : ''}`} onClick={(e) => { e.stopPropagation(); setMenuOpen(false); m.onClick() }}>
+                        {m.icon}{m.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          ) : (
+            onClick && <button className="req-chev" onClick={(e) => { e.stopPropagation(); onClick() }}><ChevronDown size={18} /></button>
+          )}
           <div className="req-meta">
             {date && (
               <div className="req-dateblock">
@@ -94,9 +123,12 @@ export default function RequestCard({ icon, flag, highlight, pills = [], chips =
       </div>
 
       {pop && hoverPreview && (
-        <div className="email-hover-pop" style={{ top: pop.top, left: pop.left, maxHeight: pop.maxH }}>
-          {hoverPreview}
-        </div>
+        <>
+          <div className="email-hover-backdrop" />
+          <div className="email-hover-pop" onMouseEnter={keepOpen} onMouseLeave={closeSoon}>
+            {hoverPreview}
+          </div>
+        </>
       )}
     </>
   )

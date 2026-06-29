@@ -8,7 +8,7 @@ Production deployment for the Ascot Remortgage Reminder app.
 |-------|------|-------|
 | Frontend | React 18 + Vite SPA | Static build (`dist/`), env baked at **build time** |
 | Backend | Node 20, native `http` (no framework) | `server/index.mjs`, no build step |
-| Scheduler | `node-cron`, in-process | Fires the 08:30 run — needs an always-on, single instance |
+| Scheduler | `node-cron`, in-process | Fires the 09:00 run — needs an always-on, single instance |
 | Integrations | Asana, Insightly, Gmail (OAuth) | Server-side only |
 | Database | **None wired yet** | Queue + audit are in-memory; Supabase is a future phase |
 | Auth | **None** | API is unauthenticated unless `API_TOKEN` is set |
@@ -57,7 +57,7 @@ This is **one repo, two deployables**: a static frontend and a long-running API.
 | `INSIGHTLY_API_KEY` / `INSIGHTLY_API_URL` | secret / url | Contact email lookup |
 | `GMAIL_CLIENT_ID` / `GMAIL_CLIENT_SECRET` / `GMAIL_REFRESH_TOKEN` | secret | Send mail |
 | `MAIL_FROM_NAME` / `MAIL_FROM_ADDRESS` / `MAIL_REPLY_TO` / `MAIL_BCC` | addresses | Headers |
-| `RUN_CRON` / `RUN_TIMEZONE` / `RUN_WEEKENDS` | `30 8 * * *` / `Europe/London` / `yes` | Schedule |
+| `RUN_CRON` / `RUN_TIMEZONE` / `RUN_WEEKENDS` | `0 9 * * *` / `Europe/London` / `yes` | Schedule |
 
 Full template: `server/.env.example`. Frontend template: `.env.example`.
 
