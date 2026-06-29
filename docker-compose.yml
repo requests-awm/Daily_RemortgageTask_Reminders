@@ -11,7 +11,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: Dockerfile.api
+      dockerfile: Dockerfile
     image: remortgage-reminder-api
     # Secrets are injected at runtime, never baked into the image.
     env_file:
