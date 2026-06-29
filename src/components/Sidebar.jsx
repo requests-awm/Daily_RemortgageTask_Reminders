@@ -16,21 +16,21 @@ export default function Sidebar() {
       </div>
 
       <div className="nav-section-label">Workflow</div>
-      <NavLink to="/" end className={link}>
-        <LayoutGrid size={17} /> Overview
+      <NavLink to="/tasks" className={link}>
+        <Table2 size={17} /> All Tasks
+      </NavLink>
+      <NavLink to="/upcoming" className={link}>
+        <CalendarClock size={17} /> Upcoming
       </NavLink>
       <NavLink to="/review" className={link}>
         <ListChecks size={17} /> Review Queue
         {counts.pending > 0 && <span className="badge-count">{counts.pending}</span>}
       </NavLink>
-      <NavLink to="/upcoming" className={link}>
-        <CalendarClock size={17} /> Upcoming
-      </NavLink>
-      <NavLink to="/tasks" className={link}>
-        <Table2 size={17} /> All Tasks
-      </NavLink>
       <NavLink to="/audit" className={link}>
         <History size={17} /> Audit Log
+      </NavLink>
+      <NavLink to="/" end className={link}>
+        <LayoutGrid size={17} /> Overview
       </NavLink>
 
       <div className="nav-section-label">Configure</div>
