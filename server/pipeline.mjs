@@ -38,6 +38,58 @@ export async function runPipeline(runDate = new Date()) {
   }
 }
 
+// 'clean' (default) = auto-send reminders with no blockers, hold the rest.
+// 'off' = send nothing automatically (everything waits in Awaiting Review).
+export function autoSendMode() {
+  return (process.env.AUTO_SEND || 'clean').toLowerCase() === 'off' ? 'off' : 'clean'
+}
+
+// Run the pipeline, then auto-send the CLEAN candidates (no blockers) and HOLD
+// the rest for human review. `live` is true only for the real daily/manual run
+// — it's the only path allowed to actually send (and only when SEND_MODE=live).
+// Ad-hoc date exploration always passes live:false, so it never sends for real.
+export async function runAndDispatch(runDate, { live = false } = {}) {
+  const base = await runPipeline(runDate)
+  if (autoSendMode() === 'off') {
+    return { ...base, autoSend: 'off', autoSent: 0, held: base.matched }
+  }
+
+  const reallySend = live && sendMode() === 'live'
+  const stamp = format(new Date(), 'yyyy-MM-dd HH:mm')
+  let autoSent = 0
+  let held = 0
+
+  for (const c of base.candidates) {
+    if (c.blockers && c.blockers.length) {
+      c.autoStatus = 'held'
+      c.holdReason = c.blockers.join('; ')
+      held++
+      continue
+    }
+    if (!reallySend) {
+      // Dry simulation — clean reminders are marked sent, but no email goes out.
+      c.autoStatus = 'sent'
+      c.dryRun = true
+      c.sentAt = stamp
+      autoSent++
+      continue
+    }
+    try {
+      await sendReminder({ id: c.id, subject: c.message.subject, bodyHtml: c.message.bodyHtml, comment: c.message.comment, override: false })
+      c.autoStatus = 'sent'
+      c.dryRun = false
+      c.sentAt = stamp
+      autoSent++
+    } catch (e) {
+      c.autoStatus = 'held'
+      c.holdReason = e.message
+      held++
+    }
+  }
+
+  return { ...base, autoSend: 'clean', dry: !reallySend, autoSent, held }
+}
+
 // Forward calendar of reminders due within `days` — for the "Upcoming" view.
 export async function listUpcoming(days = 60) {
   const tasks = await fetchAllTasks()

@@ -18,10 +18,13 @@ This is **one repo, two deployables**: a static frontend and a long-running API.
 
 ## Recommended target (simplest reliable)
 
-- **Frontend → Vercel** (or Netlify / Render Static). Config: `vercel.json`.
-- **Backend → Render** web service (or Railway / Fly.io). Config: `render.yaml`.
-- **Alternative (single host):** `docker compose up` on one VPS using the
-  provided `Dockerfile.web` + `Dockerfile.api` + `docker-compose.yml`.
+- **Single container → Google Cloud Run** — one image serves the SPA + API on
+  one URL. Config: `Dockerfile`, guide: **[CLOUDRUN.md](CLOUDRUN.md)**.
+- **Local / any Docker host:** `docker compose up --build` → http://localhost:8080
+  (the same single image).
+- **Split alternative (legacy):** Vercel for the SPA (`vercel.json`) + Render for
+  the API (`render.yaml`). Workable, but it's the split that caused the root-404
+  routing confusion — the single container avoids it.
 
 > ⚠️ The scheduler is in-process. Do **not** use a scale-to-zero / free
 > sleeping plan or multiple replicas — the cron would miss runs or double-fire.
@@ -82,7 +85,7 @@ Full template: `server/.env.example`. Frontend template: `.env.example`.
 | Frontend build | `npm run build` → `dist/` |
 | Frontend preview | `npm run preview` |
 | Backend start | `node server/index.mjs` (or `npm run server` locally) |
-| Docker (both) | `docker compose up --build` |
+| Docker (single container) | `docker compose up --build` → :8080 |
 
 ---
 

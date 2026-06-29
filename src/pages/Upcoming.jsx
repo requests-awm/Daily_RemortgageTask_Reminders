@@ -108,7 +108,7 @@ export default function Upcoming() {
                   <div>{query ? 'No matches for your search.' : 'Nothing scheduled in this window.'}</div>
                 </div>
               ) : (
-                rows.map((i) => <RequestCard key={i.id} {...card(i)} />)
+                <div className="card-group">{rows.map((i) => <RequestCard key={i.id} {...card(i)} />)}</div>
               )}
             </>
           )}

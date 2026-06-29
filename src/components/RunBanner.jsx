@@ -2,7 +2,8 @@ import { Radio, FlaskConical, AlertOctagon, Loader2 } from 'lucide-react'
 import { useStore } from '../data/store.jsx'
 
 export function RunBanner() {
-  const { mode, sendMode, error } = useStore()
+  const { mode, sendMode, autoSend, error } = useStore()
+  const policy = autoSend === 'off' ? 'every reminder waits for manual approval' : 'clean reminders auto-send; blocked ones are held for review'
   if (error) {
     return (
       <div className="callout red" style={{ marginTop: 0 }}>
@@ -21,8 +22,8 @@ export function RunBanner() {
       <div className="callout red" style={{ marginTop: 0 }}>
         <AlertOctagon className="ico" size={18} color="var(--red)" />
         <div className="body">
-          <strong>LIVE SENDING IS ON.</strong> Live Asana + Insightly data, and approving a reminder
-          will email the real client and post the Asana comment. Set <code>SEND_MODE=dry</code> to disable.
+          <strong>LIVE SENDING IS ON.</strong> Live Asana + Insightly data — on the daily run, {policy} (real
+          emails + Asana comments). Set <code>SEND_MODE=dry</code> to disable.
         </div>
       </div>
     )
@@ -32,8 +33,8 @@ export function RunBanner() {
       <div className="callout cream" style={{ marginTop: 0 }}>
         <Radio className="ico" size={18} color="var(--amber)" />
         <div className="body">
-          <span className="title">Live data · dry-run sending.</span> Reminders are pulled live from Asana + Insightly,
-          but approving only records the decision — no email or Asana comment goes out. Set <code>SEND_MODE=live</code> to send for real.
+          <span className="title">Live data · dry-run.</span> Pulled live from Asana + Insightly. Auto-send policy: {policy} —
+          but in dry-run nothing actually sends (clean ones are simulated as sent). Set <code>SEND_MODE=live</code> to send for real.
         </div>
       </div>
     )

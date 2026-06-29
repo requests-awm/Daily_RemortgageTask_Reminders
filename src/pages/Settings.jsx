@@ -17,6 +17,7 @@ export default function Settings() {
             <div className="body">These values currently come from the data layer (mock). Persisting changes is a backend task for the Supabase phase.</div>
           </div>
 
+          <div className="card-group">
           <div className="card card-pad">
             <div className="card-head"><Clock size={15} /> Schedule</div>
             <div className="kv-grid">
@@ -64,6 +65,7 @@ export default function Settings() {
                 ))}
               </tbody>
             </table>
+          </div>
           </div>
         </div>
       </div>

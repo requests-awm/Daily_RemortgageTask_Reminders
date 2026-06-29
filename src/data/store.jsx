@@ -19,9 +19,11 @@ const SEED_AUDIT = [
 const withStatus = (candidates) =>
   candidates.map((c) => ({
     ...c,
-    status: c.stopped ? 'stopped' : 'pending', // pending | sent | skipped | stopped
+    // Backend auto-send marks clean reminders 'sent' and holds the rest; held +
+    // unmarked fall through to pending (Awaiting Review), stopped to its tab.
+    status: c.autoStatus === 'sent' ? 'sent' : c.stopped ? 'stopped' : 'pending',
     skipReason: null,
-    sentAt: null,
+    sentAt: c.sentAt || null,
   }))
 
 const StoreCtx = createContext(null)
@@ -32,6 +34,7 @@ export function StoreProvider({ children }) {
   const [runDate, setRunDate] = useState(new Date())
   const [mode, setMode] = useState('mock')
   const [sendMode, setSendMode] = useState('dry')
+  const [autoSend, setAutoSend] = useState('clean')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -44,6 +47,7 @@ export function StoreProvider({ children }) {
         setRunDate(run.runDate)
         setMode(run.mode)
         setSendMode(run.sendMode || 'dry')
+        setAutoSend(run.autoSend || 'clean')
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
@@ -119,6 +123,7 @@ export function StoreProvider({ children }) {
       runDate,
       mode,
       sendMode,
+      autoSend,
       loading,
       error,
       candidates,
@@ -131,7 +136,7 @@ export function StoreProvider({ children }) {
       getById: (id) => candidates.find((c) => c.id === id) || null,
       audit,
     }
-  }, [candidates, audit, runDate, mode, sendMode, loading, error])
+  }, [candidates, audit, runDate, mode, sendMode, autoSend, loading, error])
 
   return <StoreCtx.Provider value={value}>{children}</StoreCtx.Provider>
 }

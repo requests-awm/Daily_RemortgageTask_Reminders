@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ShieldCheck, ShieldAlert, ShieldOff, Mail, MailX, UserCheck, UserX,
-  ExternalLink, ArrowLeft, ArrowRight, Send, SkipForward, Pencil, MessageSquare, Sparkles, CheckCircle2,
+  ExternalLink, ArrowLeft, ArrowRight, Send, SkipForward, Pencil, MessageSquare, Sparkles, CheckCircle2, Clock,
 } from 'lucide-react'
 import Topbar from '../components/Topbar.jsx'
 import Stepper from '../components/Stepper.jsx'
@@ -41,7 +41,8 @@ export default function ReviewDetail() {
 
   const handled = c.status !== 'pending'
   const hasEmail = !!c.clientEmail
-  const canSend = hasEmail && (!c.stopped || override)
+  // Lead-day reminders are surfaced early for prep only — sending is held until the send date.
+  const canSend = hasEmail && (!c.stopped || override) && !c.leadDay
 
   const saveEdits = () => { updateMessage(c.id, draft); setEditing(false) }
   const doSend = async () => {
@@ -75,6 +76,17 @@ export default function ReviewDetail() {
             </div>
           )}
 
+          {c.leadDay && !handled && (
+            <div className="callout cream" style={{ marginBottom: 18 }}>
+              <Clock className="ico" size={18} color="var(--amber)" />
+              <div className="body">
+                <div className="title">Shown a day early — due to send {c.sendDate}</div>
+                This reminder is missing {[!c.broker && 'a mortgage broker', !c.clientEmail && 'a client email'].filter(Boolean).join(' and ')}. It's in the queue now so you can fix that before it sends tomorrow. Approving is disabled until the send date.
+              </div>
+            </div>
+          )}
+
+          <div className="card-group">
           {/* ---------------- STEP 0: Review & Compliance ---------------- */}
           {(step === 0 || handled) && (
             <>
@@ -150,6 +162,20 @@ export default function ReviewDetail() {
             </>
           )}
 
+          {/* ---------- Handled: show the exact email + comment (read-only) ---------- */}
+          {handled && (
+            <>
+              <div className="card card-pad">
+                <div className="card-head"><Mail size={15} /> {c.status === 'sent' ? 'Email that was sent' : 'Email that would have been sent'}</div>
+                <EmailPreview candidate={c} />
+              </div>
+              <div className="card card-pad">
+                <div className="card-head"><MessageSquare size={15} /> Asana comment {c.status === 'sent' ? 'posted' : '(not posted)'}</div>
+                <div className="email-body" style={{ borderRadius: 'var(--r-md)', border: '1px solid var(--line)', whiteSpace: 'pre-wrap' }}>{c.message.comment}</div>
+              </div>
+            </>
+          )}
+
           {/* ---------------- STEP 1: Message ---------------- */}
           {step === 1 && !handled && (
             <>
@@ -198,6 +224,9 @@ export default function ReviewDetail() {
                 </ul>
               </div>
 
+              {c.leadDay && (
+                <div className="callout cream"><Clock className="ico" size={18} color="var(--amber)" /><div className="body">This reminder isn't due until <strong>{c.sendDate}</strong> — it's in the queue a day early so the {[!c.broker && 'broker', !c.clientEmail && 'client email'].filter(Boolean).join(' and ')} can be sorted first. Approving is disabled until the send date.</div></div>
+              )}
               {!hasEmail && (
                 <div className="callout red"><MailX className="ico" size={18} color="var(--red)" /><div className="body">Cannot send: no client email on file. Resolve in Insightly or skip this reminder.</div></div>
               )}
@@ -227,6 +256,7 @@ export default function ReviewDetail() {
               </div>
             </div>
           )}
+          </div>
         </div>
       </div>
 

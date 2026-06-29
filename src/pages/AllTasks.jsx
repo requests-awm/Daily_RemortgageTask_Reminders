@@ -143,7 +143,7 @@ export default function AllTasks() {
                 </div>
               </div>
               {view === 'cards' ? (
-                rows.map((t) => <RequestCard key={t.id} {...cardProps(t)} />)
+                <div className="card-group">{rows.map((t) => <RequestCard key={t.id} {...cardProps(t)} />)}</div>
               ) : (
                 <SheetTable
                   columns={columns}

@@ -23,32 +23,29 @@ See **[DEPLOYMENT.md](DEPLOYMENT.md)** for the full guide — recommended target
 smoke tests, and rollback. Config files: `vercel.json`, `render.yaml`,
 `.github/workflows/ci.yml`.
 
-## Run with Docker
+## Run with Docker (single container)
 
-Full stack — nginx-served SPA + the Node API — via docker-compose.
+One image serves the SPA **and** the API on one port — the same image that
+deploys to Cloud Run (see **[CLOUDRUN.md](CLOUDRUN.md)**).
 
 ```bash
 cp server/.env.example server/.env   # then fill in real values
-docker compose up --build
-#   web -> http://localhost:8080   (mock mode by default — runs standalone)
-#   api -> http://localhost:8787   (live Asana/Insightly/Gmail + scheduler)
+docker compose up --build            # -> http://localhost:8080  (app + /api)
 ```
 
+Or without compose:
+
+```bash
+docker build -t mortgage-reminders .
+docker run -p 8080:8080 --env-file server/.env mortgage-reminders
+```
+
+- **One origin:** the SPA is baked live + same-origin, so it calls `/api/*` on its
+  own host — no CORS, no second container.
 - **Secrets** live only in `server/.env`, injected at runtime via `env_file`. The
-  `.dockerignore` keeps every `.env` out of the images — only `*.example` is allowed in.
-- **Mock vs live:** Vite bakes `VITE_*` at build time, so the `web` image defaults to
-  **mock mode** (no backend needed). For live mode, rebuild web pointing at the API
-  *as the browser reaches it*:
-
-  ```bash
-  docker compose build \
-    --build-arg VITE_USE_MOCK=false \
-    --build-arg VITE_API_BASE_URL=http://localhost:8787 web
-  docker compose up
-  ```
-
+  `.dockerignore` keeps every `.env` out of the image — only `*.example` is allowed in.
 - **Sending stays locked:** `SEND_MODE=dry` and `TEST_RECIPIENTS_ONLY=true` default on
-  in the `api` container — see the Safety section below.
+  — see the Safety section below.
 
 ## What it does
 

@@ -57,6 +57,7 @@ export default function ReviewQueue() {
       pills: [
         c.isTest && { key: 'test', label: 'TEST', color: c.testColor },
         { key: 'st', ...STATUS_PILL[c.status] },
+        c.leadDay && { key: 'lead', label: 'Sends tomorrow', variant: 'amber', icon: <Clock size={12} /> },
         { key: 'stage', label: c.stage.title, color: c.stage.color },
         { key: 'dir', label: c.stage.dir === 'before' ? 'Pre-expiry' : 'On SVR', variant: 'outline' },
       ].filter(Boolean),
@@ -199,7 +200,7 @@ export default function ReviewQueue() {
                     {rows.length} {TABS.find((t) => t.key === tab).label.toLowerCase()} · click to open the review
                   </div>
                   {view === 'cards' ? (
-                    rows.map((c) => <RequestCard key={c.id} {...cardProps(c)} />)
+                    <div className="card-group">{rows.map((c) => <RequestCard key={c.id} {...cardProps(c)} />)}</div>
                   ) : (
                     <SheetTable
                       columns={columns}

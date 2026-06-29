@@ -57,16 +57,6 @@ export function evaluateTasks(tasks, runDate, contactsById = {}) {
     const remDate = fieldDate(remField)
     if (!remDate) continue
 
-    let matchedStage = null
-    for (const stage of STAGES) {
-      const target = addMonths(runDate, stage.months)
-      if (differenceInCalendarDays(remDate, target) === 0) {
-        matchedStage = stage
-        break
-      }
-    }
-    if (!matchedStage) continue
-
     const stopField = findField(task, 'af_Remortgage_Stop_Automation')
     const stopValue = fieldValue(stopField)
     const stopped = !!stopValue && String(stopValue).trim() !== ''
@@ -81,11 +71,31 @@ export function evaluateTasks(tasks, runDate, contactsById = {}) {
       brokerByEmail(brokerVal) ||
       brokerByFieldId(brokerVal)
 
-    const { fullName, firstName, lastName } = parseName(task.name)
     const contact = (insightlyId && contactsById[insightlyId]) || null
     const clientEmail = contact?.email || null
 
+    // A missing broker or client email is a fixable gap: surface the reminder one
+    // day before it's due so a human has time to appoint the broker / add the email
+    // before it sends. Such a lead-day match is flagged leadDay so the UI holds it.
+    const leadDays = (!broker || !clientEmail) ? 1 : 0
+
+    // Match on the trigger (send) date directly — addMonths(remDate, -months) —
+    // the SAME convention computeUpcoming uses. Comparing the inverse direction
+    // (addMonths(runDate, months) === remDate) silently drops month-end deals like
+    // the 31st, whose exact match day doesn't exist in shorter months.
+    let matchedStage = null
+    let leadDay = false
+    for (const stage of STAGES) {
+      const delta = differenceInCalendarDays(addMonths(remDate, -stage.months), runDate)
+      if (delta === 0) { matchedStage = stage; leadDay = false; break }
+      if (leadDays && delta === leadDays) { matchedStage = stage; leadDay = true; break }
+    }
+    if (!matchedStage) continue
+
+    const { fullName, firstName, lastName } = parseName(task.name)
+
     const dealEndDate = format(remDate, 'MMMM dd yyyy')
+    const sendDate = format(addMonths(remDate, -matchedStage.months), 'yyyy-MM-dd')
     const asanaLink = `https://app.asana.com/0/${PROJECT_ID}/${task.gid}`
     const msg = buildMessage(matchedStage.template, {
       firstName: firstName || fullName,
@@ -109,6 +119,8 @@ export function evaluateTasks(tasks, runDate, contactsById = {}) {
       stageLabel: matchedStage.label,
       stage: matchedStage,
       confirmedDate: format(remDate, 'yyyy-MM-dd'),
+      sendDate,
+      leadDay,
       dealEndDate,
       stopped,
       stopValue: stopped ? stopValue : null,

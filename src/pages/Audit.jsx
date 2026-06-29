@@ -23,6 +23,7 @@ export default function Audit() {
             <button className="btn btn-outline btn-sm" style={{ marginLeft: 'auto' }}><Download size={14} /> Export CSV</button>
           </div>
 
+          <div className="card-group">
           <div className="card" style={{ overflow: 'hidden' }}>
             <table className="audit">
               <thead>
@@ -44,6 +45,7 @@ export default function Audit() {
                 ))}
               </tbody>
             </table>
+          </div>
           </div>
         </div>
       </div>

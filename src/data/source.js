@@ -6,12 +6,13 @@ import { USE_MOCK, API_BASE_URL } from '../config/env.js'
 // The one place that decides mock vs live. Returns { runDate: Date, candidates, mode }.
 export async function loadRun(date) {
   if (USE_MOCK) {
-    return {
-      mode: 'mock',
-      sendMode: 'dry',
-      runDate: RUN_DATE,
-      candidates: evaluateTasks(MOCK_TASKS, RUN_DATE, MOCK_CONTACTS),
-    }
+    // Mirror the backend auto-send-clean policy as a dry simulation so mock mode
+    // previews the hybrid: clean reminders -> Sent, blocked ones -> Awaiting.
+    const stamp = format(new Date(), 'yyyy-MM-dd HH:mm')
+    const candidates = evaluateTasks(MOCK_TASKS, RUN_DATE, MOCK_CONTACTS).map((c) =>
+      c.blockers.length === 0 ? { ...c, autoStatus: 'sent', dryRun: true, sentAt: stamp } : c
+    )
+    return { mode: 'mock', sendMode: 'dry', autoSend: 'clean', runDate: RUN_DATE, candidates }
   }
 
   const qs = date ? `?date=${encodeURIComponent(date)}` : ''
@@ -24,6 +25,7 @@ export async function loadRun(date) {
   return {
     mode: 'live',
     sendMode: data.sendMode || 'dry',
+    autoSend: data.autoSend || 'clean',
     runDate: data.runDate ? parseISO(data.runDate) : new Date(),
     candidates: data.candidates || [],
   }

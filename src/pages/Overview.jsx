@@ -78,6 +78,7 @@ export default function Overview() {
             </div>
           </div>
 
+          <div className="card-group">
           <div className="stat-grid">
             <div className="stat">
               <div className="label">Awaiting review</div>
@@ -100,6 +101,7 @@ export default function Overview() {
               <div className="sub">stop-flag set on task</div>
             </div>
           </div>
+          </div>
 
           {counts.blocked > 0 && (
             <div className="callout cream" style={{ marginBottom: 18 }}>
@@ -111,6 +113,7 @@ export default function Overview() {
             </div>
           )}
 
+          <div className="card-group">
           <div className="card">
             <div className="card-pad" style={{ paddingBottom: 6 }}>
               <div className="card-head">Breakdown by stage</div>
@@ -129,6 +132,7 @@ export default function Overview() {
                 </span>
               </div>
             ))}
+          </div>
           </div>
 
           <div className="callout blue">
