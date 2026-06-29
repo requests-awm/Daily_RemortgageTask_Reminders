@@ -4,7 +4,9 @@ import { Search, CalendarClock, CalendarCheck, User, ShieldOff, RefreshCw } from
 import Topbar from '../components/Topbar.jsx'
 import { RunBanner, LoadingState } from '../components/RunBanner.jsx'
 import RequestCard from '../components/RequestCard.jsx'
+import EmailHover from '../components/EmailHover.jsx'
 import { loadUpcoming } from '../data/source.js'
+import { buildMessage } from '../data/emailTemplates.js'
 
 const fmt = (d) => { try { return format(typeof d === 'string' ? parseISO(d) : d, 'dd MMM yyyy') } catch { return '—' } }
 const WINDOWS = [30, 60, 90]
@@ -34,6 +36,12 @@ export default function Upcoming() {
     const due = i.daysUntil === 0
       ? { key: 'd', label: 'Today', variant: 'red' }
       : { key: 'd', label: `In ${i.daysUntil} day${i.daysUntil > 1 ? 's' : ''}`, variant: i.daysUntil <= 7 ? 'amber' : 'slate' }
+    // Build the same email the run will generate, so the hover shows the real draft.
+    const msg = buildMessage(i.stage.template, {
+      firstName: (i.fullName || '').split(' ')[0] || i.fullName,
+      dealEndDate: i.dealEndDate,
+      asanaLink: i.asanaLink,
+    })
     return {
       icon: <CalendarClock size={18} />,
       flag: i.stopped,
@@ -54,6 +62,7 @@ export default function Upcoming() {
         { key: 'deal', icon: <CalendarCheck size={13} />, text: `Deal ends ${fmt(i.confirmedDate)}`, muted: true },
         { key: 'broker', icon: <User size={13} />, text: i.brokerName || 'No broker', muted: !i.brokerName },
       ],
+      hoverPreview: <EmailHover subject={msg.subject} bodyHtml={msg.bodyHtml} to={null} cc={i.brokerName} />,
       onClick: () => window.open(i.asanaLink, '_blank'),
     }
   }

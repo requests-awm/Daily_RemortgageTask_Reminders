@@ -497,6 +497,32 @@ table.gsheet td.gs-blocker { color: var(--red); font-weight: 600; }
 .chip:hover { background: #f3faf5; }
 .chip.bad { border-color: #f1c4c1; color: #b3261e; }
 
+/* hover email preview popover */
+.email-hover-pop {
+  position: fixed;
+  width: 430px;
+  z-index: 60;
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  pointer-events: none;
+  animation: ehfade .1s ease-out;
+}
+@keyframes ehfade { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: none; } }
+.eh { position: relative; }
+.eh-head {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--cream); border-bottom: 1px solid var(--cream-line);
+  color: var(--amber-strong); font-weight: 650; font-size: 12px;
+  padding: 8px 14px;
+}
+.eh-sub { font-weight: 700; color: var(--ink); font-size: 13.5px; padding: 11px 14px 2px; }
+.eh-to { font-size: 12px; color: var(--muted); padding: 0 14px 10px; border-bottom: 1px solid var(--line); }
+.eh-body { padding: 14px; max-height: 300px; overflow: hidden; }
+.eh-fade { position: absolute; left: 0; right: 0; bottom: 0; height: 46px; background: linear-gradient(to bottom, rgba(255,255,255,0), var(--panel)); }
+
 /* view toggle */
 .viewseg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: var(--r-sm); overflow: hidden; }
 .viewseg button { background: var(--panel); border: none; padding: 7px 12px; font-size: 12.5px; font-weight: 600; color: var(--ink-soft); display: inline-flex; align-items: center; gap: 6px; border-right: 1px solid var(--line); }

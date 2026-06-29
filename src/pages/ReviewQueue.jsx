@@ -7,6 +7,7 @@ import { RunBanner, LoadingState } from '../components/RunBanner.jsx'
 import StageBadge from '../components/StageBadge.jsx'
 import SheetTable from '../components/SheetTable.jsx'
 import RequestCard from '../components/RequestCard.jsx'
+import EmailHover from '../components/EmailHover.jsx'
 import { STAGES } from '../data/offsets.js'
 import { useStore } from '../data/store.jsx'
 
@@ -74,6 +75,7 @@ export default function ReviewQueue() {
         { key: 'email', icon: <Mail size={13} />, text: c.clientEmail || 'No email on file', muted: true },
       ],
       stamp,
+      hoverPreview: <EmailHover subject={c.message.subject} bodyHtml={c.message.bodyHtml} to={c.clientEmail} cc={c.broker?.email} />,
       onClick: () => nav(`/review/${c.id}`),
     }
   }
